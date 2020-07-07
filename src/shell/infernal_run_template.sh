@@ -27,7 +27,7 @@ infernal_bigmem_jobfile="$parent_dir/scripts/${STEPNAME}_infernal_bigmem_jobfile
 infernal_bigmem_dsq="dSQ.py --jobfile $infernal_bigmem_jobfile --batch-file $infernal_bigmem_batchfile \
   --partition $PARTITION --mem 32G --chdir $parent_dir --status-dir $parent_dir -c 4 --time 2-0\
   --output output/infernal_bigmem_output%4a.out --job-name infernal_bigmem.$(basename $parent_dir) --submit"
-bigmem_COMMAND=$'#!/bin/bash \n'"module load dSQ; cat $parent_dir/job_${infernal_JOBID}_status.tsv | cut -f 2,7 | grep ^137 | cut -f2 > $infernal_bigmem_jobfile; $infernal_bigmem_dsq"
+bigmem_COMMAND=$'#!/bin/bash \n'"module load dSQ; cat $parent_dir/job_${infernal_JOBID}_status.tsv | cut -f 2,7 | grep -e ^135 -e ^137 | cut -f2 > $infernal_bigmem_jobfile; $infernal_bigmem_dsq"
 bigmem_RESPONSE=$(echo "$bigmem_COMMAND" | sbatch -p $PARTITION --dependency afterany:${infernal_JOBID} -t 1-0 --job-name dsq_bigmem_infernal.$(basename $parent_dir))
 bigmem_JOBID=${bigmem_RESPONSE##* }
 

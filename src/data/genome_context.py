@@ -1,19 +1,13 @@
 from Bio import Entrez
 import pandas as pd
-import numpy as np
 import os
 import urllib.request
 import shutil
 import gzip
-import sys
-from Bio import SeqIO
-import configparser
 import subprocess
 from IPython.core.display import display, HTML, SVG
 from urllib.error import HTTPError
 import time
-from Bio import AlignIO
-import string
 from itertools import compress
 import genomeview
 from src.shell.gff2bed import convert
@@ -21,19 +15,19 @@ from src.shell.gff2bed import convert
 Entrez.email = os.environ.get("ENTREZ_EMAIL")
 Entrez.api_key = os.environ.get("ENTREZ_API")
 
+
 def get_nuccore_id(hit_accession):
     '''
-    get the nuccore id of the hit by searching the nuccore database with the hit accession
+    get the nuccore id of the hit by searching the nuccore database
     '''
     try:
-        #search the nuccore database for info on the hit_accession
-        nuccore_search_handle = Entrez.esearch(term=hit_accession, field='ACCN', db='nuccore')
-        result = Entrez.read(nuccore_search_handle)
+        # search the nuccore database for info on the hit_accession
+        nuccore_search_handle = Entrez.esearch(term=hit_accession,
+                                               field='ACCN', db='nuccore')
+        result = Entrez.read(nuccore_search_handle, validate=False)
         nuccore_search_handle.close()
         nuccore_id = result['IdList'][0]
-
         return nuccore_id
-    
     except HTTPError as e:
         if(e.code == 429):
             time.sleep(0.5)
@@ -41,21 +35,21 @@ def get_nuccore_id(hit_accession):
         else:
             raise
 
+
 def fetch_deprecated_record_id(nuccore_id):
     '''
     returns record id for deprecated accessions
     '''
     try:
         fetch_record_handle = Entrez.efetch(db="nucleotide", id=nuccore_id, rettype="gb", retmode="xml")
-        result = Entrez.read(fetch_record_handle)
+        result = Entrez.read(fetch_record_handle, validate=False)
         fetch_record_handle.close()
-        summary = result[0]
 
         acc = result[0]['GBSeq_xrefs'][-1]['GBXref_id']
 
         search_term = "{} [Assembly Accession]".format(acc)
         assembly_query_handle = Entrez.esearch(db="assembly", term=search_term, field='ASAC')
-        assembly_query_result = Entrez.read(assembly_query_handle)
+        assembly_query_result = Entrez.read(assembly_query_handle, validate=False)
         assembly_query_handle.close()
         assembly_record_ids = assembly_query_result["IdList"]
         
@@ -65,8 +59,8 @@ def fetch_deprecated_record_id(nuccore_id):
    
         else:
             # Get summaries of the duplicate files
-            summary_handle= Entrez.esummary(id=','.join(assembly_query_result['IdList']), db='assembly')
-            result = Entrez.read(summary_handle)
+            summary_handle = Entrez.esummary(id=','.join(assembly_query_result['IdList']), db='assembly')
+            result = Entrez.read(summary_handle, validate=False)
             summary_handle.close()
             # Get a list of the assembly accessions
             accession_list = [document_summary['AssemblyAccession'] for document_summary in result['DocumentSummarySet']['DocumentSummary']]
@@ -96,7 +90,7 @@ def get_assembly_link(nuccore_id):
     try:
         #get link to genome assembly information
         assembly_link_handle =Entrez.elink(id = nuccore_id, dbfrom = 'nuccore', linkfrom = 'nuccore_assembly' , db = 'assembly')
-        assembly_query_result = Entrez.read(assembly_link_handle)
+        assembly_query_result = Entrez.read(assembly_link_handle, validate=False)
         assembly_link_handle.close()
         #print(assembly_query_result)
         
@@ -131,7 +125,7 @@ def get_assembly_document(record_id):
     try:
         #get information on assembly for the specific assembly accession
         assembly_record_summary_handle = Entrez.esummary(db="assembly", id=record_id)
-        result = Entrez.read(assembly_record_summary_handle)
+        result = Entrez.read(assembly_record_summary_handle, validate=False)
         assembly_record_summary_handle.close()
 
         #extract assembly record summary for ftp path later
@@ -161,7 +155,7 @@ def get_taxonomy(nuccore_id):
         record_id = get_assembly_link(nuccore_id)
         tax_id = get_assembly_document(record_id)['Taxid']
         taxonomy_info_handle= Entrez.efetch(db = 'taxonomy', id = tax_id, retmode = 'xml')
-        result = Entrez.read(taxonomy_info_handle)
+        result = Entrez.read(taxonomy_info_handle, validate=False)
         taxonomy_info_handle.close()
         return result[0]['Lineage']
     
