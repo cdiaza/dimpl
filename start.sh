@@ -136,6 +136,12 @@ if [[ ${ENTREZ_APIKEY} != "" ]]; then
     echo "ENTREZ_APIKEY=${ENTREZ_APIKEY}" >> .env
 fi
 
+input "Enter Breaker Lab API Key (Required for lab members, others can skip it): "
+read BL_APIKEY
+if [[ ${BL_APIKEY} != "" ]]; then
+    echo "BL_APIKEY=${BL_APIKEY}" >> .env
+fi
+
 seek_confirmation "Customize Rfam database location? (Used when running local copies of Rfam): "
 if is_confirmed; then
 
